@@ -1,0 +1,9 @@
+.idea/
+.DS_Store
+.vscode/*
+venv/
+__pycache__/
+.ipynb_checkpoints
+.pytest_cache/
+.coverage
+coverage.json
