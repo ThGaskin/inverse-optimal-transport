@@ -1,5 +1,9 @@
-# Inverse Optimal Transport
-### Inverse Optimal Transport project (Imperial/Warwick)
+# Modelling Global Trade with Optimal Transport
+### Data and code repository
+
+This repository contains all the code and data required to train a neural network on FAOStat data and plot the results.
+Code is presented in Jupyter notebooks. We recommend installing required packages into a virtual environment, as detailed
+below. Since the datasets are large, they are stored using git lfs.
 
 ---
 ### Installation
@@ -14,20 +18,17 @@
 - Create a virtual environment and install all required packages using
   ```commandline
   pip install -r requirements.txt
+- In order to save space,  datasets have been uploaded using [git lfs](https://git-lfs.github.com) (large file
+storage). To download, first install lfs via
+  ```commandline
+  git lfs install
   ```
-### Working with git
-- If you want to make changes, ideally create a new branch using the command 
-    ```commandline
-    git checkout -b name_of_branch
-    ```
-- Push any changes to a separate branch (preferably not to `main`) using `git add`, `git commit`, `git push`:
+  This assumes you have the git command line extension installed. Then, from within the repo, do
+  ```commandline
+  git lfs pull
+  ```
+  This will pull all the datasets.
 
-    ```commandline
-    git add .   # This adds all changes in current directory
-    git commit -m "Add a commit message describing the changes"   # Add a short commit message detailing the changes
-    git push   # Push to remote
-    ```
-    Most IDEs (such as VisualCode or PyCharm) have a git interface, avoiding the need to use a terminal.
-
-- Merge changes into the `main` branch by [creating a pull request](https://github.com/ThGaskin/inverse-optimal-transport/compare).
-- Add any required packages for a virtual environment to the `requirements.txt` file.
+### Training and plotting a model
+Train a model by running the `model` notebook — all steps are documented there. Plot the results using the `plot` 
+notebook.
