@@ -1,0 +1,12 @@
+cartopy
+dantro>=0.18.0
+matplotlib
+numpy
+pandas
+pyproj
+jupyter
+scipy
+setuptools
+torch
+xarray
+tqdm
