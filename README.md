@@ -11,11 +11,16 @@
     ```
     The preferred method is to clone with SSH after having [obtained an SSH key](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account)
     – this circumvents having to enter access passwords to push changes to remote.
-- Create a new branch using the command 
+- Create a virtual environment and install all required packages using
+  ```commandline
+  pip install -r requirements.txt
+  ```
+### Working with git
+- If you want to make changes, ideally create a new branch using the command 
     ```commandline
     git checkout -b name_of_branch
     ```
-- Push any changes to a separate branch (not to `main`) using `git add`, `git commit`, `git push`:
+- Push any changes to a separate branch (preferably not to `main`) using `git add`, `git commit`, `git push`:
 
     ```commandline
     git add .   # This adds all changes in current directory
