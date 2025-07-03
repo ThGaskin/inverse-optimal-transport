@@ -10,7 +10,8 @@ def Sinkhorn(
     tolerance: float = 1e-9,
     max_iter: int = 100,
     requires_gradient: bool = True,
-    DEBUG: bool = False
+    DEBUG: bool = False,
+    normalise: bool =True
 ) -> Sequence[torch.Tensor]:
 
     """Basic Sinkhorn algorithm. The Sinkhorn algorithm is a fixed-point iteration that, given marginal constraints
@@ -28,6 +29,7 @@ def Sinkhorn(
     :param requires_gradient: whether the marginal constraints require differentiation
     :param DEBUG: flag that can be set to return the
         algorithm will return the difference between successive guesses
+    :param normalise: whether to normalise one of the scaling vectors
     :returns: tuple of marginal constraints
     """
 
@@ -36,9 +38,10 @@ def Sinkhorn(
     _n = torch.ones_like(b)
 
     # Normalise one of the constraints
-    _norm_m = torch.norm(_m)
-    _n *= _norm_m
-    _m /= _norm_m
+    if normalise:
+        _norm_m = torch.norm(_m)
+        _n *= _norm_m
+        _m /= _norm_m
 
     # Set tracking requirement
     _m.requires_gradient = requires_gradient
@@ -60,9 +63,10 @@ def Sinkhorn(
         _n = b / torch.matmul(_T.transpose(0, 1), _m).transpose(0, 1)
         _m = a / torch.matmul(_T, _n.transpose(0, 1))
 
-        _norm_m = torch.norm(_m)
-        _m = _m / _norm_m
-        _n = _n * _norm_m
+        if normalise:
+            _norm_m = torch.norm(_m)
+            _m = _m / _norm_m
+            _n = _n * _norm_m
 
         _iter += 1
 

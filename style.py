@@ -35,12 +35,13 @@ rcParams.update(**{
     "axes.spines.top": False,
     "axes.spines.right": False,
     "axes.facecolor": (0, 0, 0, 0),
-    "figure.facecolor": (0, 0, 0, 0),#'#ECF3F6',
+    "figure.facecolor": (0, 0, 0, 0),
     "figure.subplot.left": 0,
     "figure.subplot.right": 1,
     "figure.subplot.bottom": 0,
     "figure.subplot.top": 1,
     "legend.facecolor": (1, 1, 1, 0.1),
     "figure.frameon": False,
-    "savefig.transparent": True
+    "savefig.transparent": True,
+    "savefig.dpi": 400
 })

@@ -1,6 +1,5 @@
 import cartopy
 import cartopy.crs as ccrs
-import geopandas
 import matplotlib.pyplot as plt
 import matplotlib.colorbar as colorbar
 import networkx as nx
@@ -12,9 +11,10 @@ from cartopy.feature import BORDERS
 from dantro.plot.utils import ColorManager
 from pyproj import Transformer
 
+from data import lookup_table, world
 
 # Convert the country names to an ISO3 code for easier labelling and selection
-def get_iso3(lookup_table, country):
+def get_iso3(country):
     """
     Retrieves the ISO 3166-1 Alpha-3 code (ISO3) for a given country name from a lookup table.
     If the country is not found or its ISO3 code is missing, the function returns the original
@@ -22,10 +22,6 @@ def get_iso3(lookup_table, country):
 
     Parameters:
     -----------
-    lookup_table : pandas.DataFrame
-        The lookup table containing country information. It should have the country names
-        as the index and a column named 'Alpha-3 code' that stores the corresponding ISO3 codes.
-
     country : str
         The name of the country for which the ISO3 code is to be retrieved.
 
@@ -38,8 +34,8 @@ def get_iso3(lookup_table, country):
 
     Example:
     --------
-    iso3_code = get_iso3('United States of America', lookup_table)
-    print(iso3_code)  # Output: 'USA' or the country name if not found.
+    iso3_code = get_iso3('Australia')
+    print(iso3_code)  # Output: 'AUS' or the country name if not found.
     """
 
     # Check if the country is in the lookup table's index
@@ -53,7 +49,7 @@ def get_iso3(lookup_table, country):
     return country if pd.isna(_iso) else _iso
 
 
-def property_from_iso3(lookup_table, iso3, item, *, correct: bool = True):
+def property_from_iso3(iso3, item, *, correct: bool = True):
     """
     Retrieves a specific property for a country, identified by its ISO3 (Alpha-3) code,
     from a given lookup table. For country names, an optional correction is applied to
@@ -61,9 +57,6 @@ def property_from_iso3(lookup_table, iso3, item, *, correct: bool = True):
 
     Parameters:
     -----------
-    lookup_table : pandas.DataFrame
-        The DataFrame containing country data. Must have a column named 'Alpha-3 code' for ISO3 codes.
-
     iso3 : str
         The ISO 3166-1 Alpha-3 code (3-letter country code) identifying the country.
 
@@ -219,7 +212,7 @@ def plot_background_map(_f, _ax, *,
     _f.patch.set(fc='white', lw=0)
 
 
-def plot_world_network(data: xr.DataArray, lookup_table: pd.DataFrame,
+def plot_world_network(data: xr.DataArray,
                        *,
                        fig=None,
                        ax=None,
@@ -246,9 +239,6 @@ def plot_world_network(data: xr.DataArray, lookup_table: pd.DataFrame,
     data : xarray.DataArray
         The data array containing trade or interaction data between countries. It should have dimensions 'Source' and
         'Destination' to represent trade between countries.
-
-    lookup_table : pandas.DataFrame
-        A DataFrame with country metadata. It must contain columns 'Alpha-3 code', 'Latitude', and 'Longitude'.
 
     fig : matplotlib.figure.Figure, optional
         The figure to plot on. If None, a new figure is created.
@@ -306,7 +296,7 @@ def plot_world_network(data: xr.DataArray, lookup_table: pd.DataFrame,
 
     Example:
     --------
-    fig, ax = plot_world_network(data, lookup_table, figsize=(12, 10), width_factor=2.0, special_countries=[('USA', 'CHN')])
+    fig, ax = plot_world_network(data, figsize=(12, 10), width_factor=2.0, special_countries=[('USA', 'CHN')])
     plt.show()
     """
 
@@ -323,8 +313,7 @@ def plot_world_network(data: xr.DataArray, lookup_table: pd.DataFrame,
     # Add exporters to the network
     export_nodes = data.sum("Destination", skipna=True)
     for country in export_nodes.coords['Source'].data:
-        lat, lon = property_from_iso3(lookup_table, country, 'Latitude'), property_from_iso3(lookup_table, country,
-                                                                                             'Longitude')
+        lat, lon = property_from_iso3(country, 'Latitude'), property_from_iso3(country,'Longitude')
         if country == 'Other' or np.isnan(lat):
             print(f"Warning: Missing coordinates for country '{country}'")
             continue
@@ -334,8 +323,7 @@ def plot_world_network(data: xr.DataArray, lookup_table: pd.DataFrame,
     # Add importers to the network
     import_nodes = data.sum("Source", skipna=True)
     for country in import_nodes.coords['Destination'].data:
-        lat, lon = property_from_iso3(lookup_table, country, 'Latitude'), property_from_iso3(lookup_table, country,
-                                                                                             'Longitude')
+        lat, lon = property_from_iso3(country, 'Latitude'), property_from_iso3(country, 'Longitude')
         if country == 'Other' or np.isnan(lat):
             continue
         import_value = 2e-3 * import_nodes.sel({"Destination": country}).data.item()
@@ -357,12 +345,8 @@ def plot_world_network(data: xr.DataArray, lookup_table: pd.DataFrame,
 
             T = data.sel({"Source": country_A, "Destination": country_B}).data.item()
             if T > 0:
-                lat_A, lon_A = property_from_iso3(lookup_table, country_A, 'Latitude'), property_from_iso3(lookup_table,
-                                                                                                           country_A,
-                                                                                                           'Longitude')
-                lat_B, lon_B = property_from_iso3(lookup_table, country_B, 'Latitude'), property_from_iso3(lookup_table,
-                                                                                                           country_B,
-                                                                                                           'Longitude')
+                lat_A, lon_A = property_from_iso3(country_A, 'Latitude'), property_from_iso3(country_A,'Longitude')
+                lat_B, lon_B = property_from_iso3(country_B, 'Latitude'), property_from_iso3(country_B,'Longitude')
                 if np.isnan(lat_A) or np.isnan(lat_B):
                     print(f"Warning: Missing edge data for {country_A} -> {country_B}")
                     continue
@@ -460,8 +444,8 @@ def get_diff(predictions: xr.DataArray, year1: int, year2: int, source: str) -> 
     return predictions.sel({"Source": source, "Year": [year1, year2]}).diff("Year")
 
 
-def plot_trade_utility_comp_map(data, *, year1: int, year2: int, source: str, world: geopandas.GeoDataFrame,
-                           colors: dict, figsize: tuple = None):
+def plot_trade_utility_comp_map(data, *, year1: int, year2: int, source: str,
+                           colors: dict, figsize: tuple = None, trade_max: float = 11):
     """
     Plots a comparative map of trade and utility changes for a specified source country between two years.
     The function creates two subplots showing changes in trade and utility with color gradients
@@ -481,14 +465,14 @@ def plot_trade_utility_comp_map(data, *, year1: int, year2: int, source: str, wo
     source : str
         The ISO 3166-1 Alpha-3 code of the source country to highlight on the map.
 
-    world : GeoDataFrame
-        world object to use for the background
-
     colors : dict
         dictionary of colors to use for plotting
 
     figsize : tuple, optional
         figure size.
+
+    trade_max: float, optional
+        maximum cut-off factor for the trade differences
 
     Returns:
     --------
@@ -505,8 +489,14 @@ def plot_trade_utility_comp_map(data, *, year1: int, year2: int, source: str, wo
     cm_GrYeRe = ColorManager(
         cmap={'continuous': True,
               'from_values': {0: colors['c_lightgreen'], 0.5: colors['c_yellow'], 1: colors['c_red']}},
-        vmin=0,
+        vmin=-1,
         vmax=1,
+    )
+
+    # Special scaling for trade map
+    cm_trade = ColorManager(
+        cmap = {'continuous': True, 'from_values': {0: colors['c_red'], 1/(1+trade_max): colors['c_yellow'], 1: colors['c_lightgreen']}, 'over': colors['c_lightgreen']},
+        vmin=-1, vmax=trade_max,
     )
 
     # Set up figure and axes
@@ -515,17 +505,6 @@ def plot_trade_utility_comp_map(data, *, year1: int, year2: int, source: str, wo
     # Fetch trade and utility differences
     _trade_diff = get_relative_diff(data.sel({"variable": "T_pred"})["mean"], year1, year2, source)
     _util_diff = get_diff(data.sel({"variable": "C"})["mean"], year1, year2, source)
-
-    # Define color managers for trade and utility changes
-    vmin_trade, vmax_trade = _trade_diff.min().item(), _trade_diff.max().item()
-    _cm_pos = ColorManager(
-        cmap={'continuous': True, 'from_values': {0: colors['c_yellow'], 1: colors['c_lightgreen']}},
-        vmin=0, vmax=vmax_trade
-    )
-    _cm_neg = ColorManager(
-        cmap={'continuous': True, 'from_values': {0: colors['c_red'], 1: colors['c_yellow']}},
-        vmin=vmin_trade, vmax=0
-    )
 
     # Plot the background and source country
     for ax in axs:
@@ -540,7 +519,7 @@ def plot_trade_utility_comp_map(data, *, year1: int, year2: int, source: str, wo
             continue
         if country in world['ISO_A3_EH'].values:
             _data = _trade_diff.sel({"Destination": country}).data
-            _color = _cm_neg.map_to_color(_data) if _data < 0 else _cm_pos.map_to_color(_data)
+            _color = cm_trade.map_to_color(_data)
             world[world['ISO_A3_EH'] == country].plot(
                 color=_color, ax=axs[0], zorder=0, lw=0.1, edgecolor=_color
             )
@@ -548,18 +527,11 @@ def plot_trade_utility_comp_map(data, *, year1: int, year2: int, source: str, wo
             print(f"Warning: Country '{country}' is missing from the world dataset.")
 
     # Plot utility differences
-    vmin_util, vmax_util = _util_diff.min().item(), _util_diff.max().item()
-    _cm_util = ColorManager(
-        cmap={'continuous': True, 'from_values': {0: colors['c_lightgreen'],
-                                                  (0 - vmin_util) / (vmax_util - vmin_util): colors['c_yellow'],
-                                                  1: colors['c_red']}},
-        vmin=vmin_util, vmax=vmax_util
-    )
     for country in _util_diff.coords["Destination"].data:
         if country == source:
             continue
         if country in world['ISO_A3_EH'].values:
-            _color = _cm_util.map_to_color(_util_diff.sel({"Destination": country}).data)
+            _color = cm_GrYeRe.map_to_color(_util_diff.sel({"Destination": country}).data)
             world[world['ISO_A3_EH'] == country].plot(
                 color=_color, ax=axs[1], zorder=0, lw=0.1, edgecolor=_color
             )
@@ -573,12 +545,12 @@ def plot_trade_utility_comp_map(data, *, year1: int, year2: int, source: str, wo
         _cbar = colorbar.Colorbar(
             _cax, cmap=cm_GrYeRe.cmap.reversed() if idx == 0 else cm_GrYeRe.cmap, orientation='vertical',
             location='right',
-            drawedges=False
+            drawedges=False,
+            extend='max' if idx == 0 else None
         )
         if idx == 0:
             _cbar.set_ticks(ticks=np.linspace(0, 1, 5),
-                            labels=["-100%", "-50%", "0", "+1{n:.0f}%".format(n=100 * vmax_trade / 2),
-                                    "+1{n:.0f}%".format(n=100 * vmax_trade)])
+                            labels=["-100%", "-50%", "0", "+{n:.0f}%".format(n=50 * (trade_max-1)), "≥{n:.0f}%".format(n=100 * (trade_max-1))])
         else:
             _cbar.set_ticks(ticks=[0, 0.5, 1],
                             labels=[-1, 0, "+1"])
@@ -589,7 +561,7 @@ def plot_trade_utility_comp_map(data, *, year1: int, year2: int, source: str, wo
 
 
 # Compare the drop in trade volume and utility
-def plot_trade_utility_comp(data, lookup_table, *, year1: int, year2: int, source: str, destinations: list,
+def plot_trade_utility_comp(data, *, year1: int, year2: int, source: str, destinations: list,
                         colors: dict, figsize: tuple = None):
     """
         Compare the percentage change in trade volume and the change in utility between two years for multiple destination countries.
@@ -602,8 +574,6 @@ def plot_trade_utility_comp(data, lookup_table, *, year1: int, year2: int, sourc
         -----------
         data : xr.DataArray
             The xarray DataArray containing trade and utility predictions.
-        lookup_table : pd.DataFrame
-            A pandas DataFrame containing country lookup information, used to get country names.
         year1 : int
             The starting year for the comparison.
         year2 : int
@@ -626,7 +596,7 @@ def plot_trade_utility_comp(data, lookup_table, *, year1: int, year2: int, sourc
 
         Example:
         --------
-        fig, axs = trade_utility_comp(data, lookup_table, year1=2021, year2=2022, source='USA',
+        fig, axs = trade_utility_comp(data, year1=2021, year2=2022, source='USA',
                                       destinations=['CHN', 'IND'], colors=color_scheme)
     """
 
@@ -669,8 +639,7 @@ def plot_trade_utility_comp(data, lookup_table, *, year1: int, year2: int, sourc
                               va='top' if _y < 0 else 'bottom')
 
         # Add the name of the country
-        axs[idx].text(0.75, min(-0.2 + _text._y, -0.5) if _y < 0 else -0.1, property_from_iso3(lookup_table, country,
-                                                                                               item='Name', correct=True),
+        axs[idx].text(0.75, min(-0.2 + _text._y, -0.5) if _y < 0 else -0.1, property_from_iso3(country, item='Name', correct=True),
                       rotation=90, va='top')
 
         axs[idx].axis('off')

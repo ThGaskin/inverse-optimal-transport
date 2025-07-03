@@ -1,0 +1,53 @@
+# Path configuration
+BASE_PATH:  "." #"~/IOT" #
+device: 'cpu'
+path_note: 'Soya' # Note added to out path
+dry_run: True # Do not save
+
+# Settings for loading the training data
+Data_loading:
+
+  # Path to data, relative to base path
+  data_path: 'data/Wheat'
+
+  # Passed to `torch.load`
+  load_args: {weights_only: True}
+
+  # Continue training a neural network from a directory
+  load_from_dir: ~ #Results/20250607_190119_Wheat
+
+# Neural network settings
+NeuralNet:
+  num_layers: 5
+  nodes_per_layer:
+    default: 60
+  activation_funcs:
+    default: tanh
+    layer_specific:
+      -1: sigmoid
+  biases:
+    default: [-1, 1]
+  learning_rate: 0.002
+  optimizer: Adam
+
+# Training settings
+Training:
+
+  # Number of epochs
+  N_epochs: 10
+
+  # Number of batches after which to perform gradient descent step
+  batch_size: 23
+
+  # Frequency at which to save the neural net and loss
+  write_every: 100
+
+  #Kwargs for the Sinkhorn algorithm
+  sinkhorn_kwargs:
+    max_iter: 100
+    tolerance: 1e-5
+    epsilon: 0.15
+    normalise: False
+
+  # Balance of regulariser and training loss
+  eta: 1
