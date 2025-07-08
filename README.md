@@ -94,3 +94,9 @@ Training:
   # Balance of regulariser and error on the transport plan in the loss function
   eta: 1
 ```
+### Gravity model
+The gravity models presented in the article can be run using the `data/Gravity_model/gavity_equation.R` script.
+The covariates are stored alongside the script in the `Covariates` folder. The estimates and parameters are stored in 
+the folders for each commodity in `data/<commodity name>/gravity_estimates`. The `covariates.csv` file are the fits using
+the covariate-based gravity model; the `fixed_effects.csv` are the results from the Gravity model using time-destination
+and time-source fixed effects. Also given are the estimated coefficients for each.

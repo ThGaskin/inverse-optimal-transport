@@ -1,5 +1,6 @@
 cartopy
 dantro>=0.18.0
+geopandas
 matplotlib
 numpy
 pandas
