@@ -7,3 +7,8 @@ __pycache__/
 .pytest_cache/
 .coverage
 coverage.json
+.Rhistory
+Images/*
+!Images/Wheat_Ukraine_1.png
+data/*
+!data/__init__.py

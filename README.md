@@ -1,4 +1,9 @@
 ![Flows](Images/Wheat_Ukraine_1.png)
+[![Python 3.9](https://img.shields.io/badge/python-3.9-blue.svg)](https://www.python.org/downloads/release/python-390/)
+[![Python 3.10](https://img.shields.io/badge/python-3.10-blue.svg)](https://www.python.org/downloads/release/python-3100/)
+[![Python 3.11](https://img.shields.io/badge/python-3.11-blue.svg)](https://www.python.org/downloads/release/python-3110/)
+[![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/downloads/release/python-3110/)
+[![Python 3.13](https://img.shields.io/badge/python-3.13-blue.svg)](https://www.python.org/downloads/release/python-3110/)
 # Modelling Global Trade with Optimal Transport
 ### Data and code repository
 
@@ -22,6 +27,20 @@ below.
   ```commandline
   pip install -r requirements.txt
 
+### Get the data from the [Huggingface repo](https://huggingface.co/datasets/ThGaskin/OT_Trade)
+The datasets and trained neural networks are hosted on Huggingface. To obtain the data, we recommend using the 
+[huggingface CLI](https://huggingface.co/docs/huggingface_hub/en/guides/cli) to download all the data:
+```commandline
+curl -LsSf https://hf.co/cli/install.sh | bash
+```
+Then, login using your access token:
+```commandline
+hf auth login
+```
+Finally, download the data into the `data/` folder:
+```commandline
+hf download ThGaskin/OT_Trade --repo-type=dataset --local-dir data
+```
 ### Evaluation
 The neural network samples for each commodity are stored in ``data/<commodity>/sample_stats.nc``. 
 Use the ``Evaluate.ipynb`` notebook to evaluate the results and reproduce the publication plots. The folders in 
